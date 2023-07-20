@@ -23,7 +23,7 @@ def main():
     quit()
 
 def runTrivyScan(image):
-    trivycommand = "docker run -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy:latest -f json -q image --ignore-unfixed " + image
+    trivycommand = "docker run -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy:latest -f json -q image --ignore-unfixed --scanners vuln " + image
 
     process = subprocess.Popen(trivycommand, stdout=subprocess.PIPE, shell=True)
     print(f"Running Trivy scan on {image}")
@@ -34,7 +34,7 @@ def runTrivyScan(image):
 
     if err is None:
         print("Command output: ", outputjson["Results"])
-        return outputjson["Results"][0]
+        return outputjson["Results"]
     else:
         print("ERROR: " + err.decode("utf-8"))
         quit(1)
@@ -42,15 +42,31 @@ def runTrivyScan(image):
 def createDockerfile(imageToBuild, trivyresults):
     print("Creating Dockerfile for hardened image")
 
-    vulns = {}
+    vulns = set()
+
+    for object in trivyresults:
+        if "Vulnerabilities" in object:
+            for vuln in object["Vulnerabilities"]:
+                vulns.add(vuln["PkgName"])
     
     file = open("./dockerbuild/Dockerfile", "w")
     file.write(f"FROM {imageToBuild}\n\n")
 
-    imageOS = trivyresults["Type"]
-    if imageOS == 'debian':
+    imageOS = trivyresults[0]["Type"]
+    if imageOS == 'debian' or imageOS == 'ubuntu':
+        cmd = "apt-get -y install"
         file.write("RUN apt update\n")
-        file.write("RUN apt-get -y install linux-libc-dev\n")
+    elif imageOS == 'alpine':
+        cmd = "apk upgrade"
+        file.write("RUN apk update\n")
+    elif imageOS == 'oracle':
+        cmd = "yum install"
+        file.write("RUN yum update\n")
+    else:
+        raise Exception("not a recognized OS type")
+
+    for vuln in vulns:
+        file.write(f"RUN {cmd} {vuln}\n")
 
     file.close()
 
