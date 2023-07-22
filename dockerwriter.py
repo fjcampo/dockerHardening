@@ -40,6 +40,14 @@ def runTrivyScan(image):
         quit(1)
 
 def createDockerfile(imageToBuild, trivyresults):
+
+    # create dockerbuild directory if it does not exist
+    if not os.path.exists('./dockerbuild'):
+        os.makedirs('./dockerbuild')
+
+    # proceed with file writing
+    file = open("./dockerbuild/Dockerfile", "w")
+    
     print("Creating Dockerfile for hardened image")
 
     vulns = set()
