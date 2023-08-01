@@ -1,5 +1,5 @@
 # dockerHardening
-This repository contain the files mentioned in the paper: Exploring Solutions for Application Container Security in Common Use Containers 
+This repository contain the files mentioned in the paper: _Exploring Solutions for Application Container Security in Common Use Containers_ 
 Written by Frank Campo and Howe Wang
 
 * _dockerWriter.py_ is a Python script proof-of-concept for automating the patching of off-the-shelf (OTS) images from Docker Hub.
