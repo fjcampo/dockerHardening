@@ -3,6 +3,8 @@ import os
 import subprocess
 import json
 
+#docker writer for CML
+
 def main():
 
     imageToBuild = input("Please enter the name of the image you want to build/harden\n(e.g., node:latest)\n")
